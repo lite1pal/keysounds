@@ -67,7 +67,6 @@ func main() {
 		log.Fatalf("parse json file: %v", err)
 	}
 
-	//	calculate keyframe
 	channels := 2
 	sampleRate := 48000.0
 
@@ -89,34 +88,6 @@ func main() {
 
 		startMs := definition.Timing[0][0]
 		endMs := definition.Timing[0][1]
-		startFrame := int(startMs * float64(sampleRate) / 1000)
-		endFrame := int(endMs * float64(sampleRate) / 1000)
-
-		startSample := startFrame * channels
-		endSample := endFrame * channels
-
-		pcmSamples := pcmBuffer.Data[startSample:endSample]
-		pcmData := make([]byte, len(pcmSamples)*2)
-		for i, sample := range pcmSamples {
-			binary.LittleEndian.PutUint16(
-				pcmData[i*2:],
-				uint16(int16(sample)),
-			)
-		}
-
-		// create a player
-		player := ctx.NewPlayer(bytes.NewReader(pcmData))
-
-		player.Play()
-
-		for player.IsPlaying() {
-			time.Sleep(10 * time.Millisecond)
-		}
-	}
-
-	for {
-		startMs := 0.0
-		endMs := 157.79166666666666
 		startFrame := int(startMs * float64(sampleRate) / 1000)
 		endFrame := int(endMs * float64(sampleRate) / 1000)
 
