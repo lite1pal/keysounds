@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"github.com/ebitengine/oto/v3"
+	"github.com/go-audio/wav"
+	hook "github.com/robotn/gohook"
 	"log"
 	"os"
 	"time"
-
-	"github.com/ebitengine/oto/v3"
-	"github.com/go-audio/wav"
 )
 
 type Definition struct {
@@ -37,7 +38,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("get full pcm buffer: %v", err)
 	}
-	log.Println(pcmBuffer.Data)
 
 	options := &oto.NewContextOptions{
 		SampleRate:   48000,
@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// read json config
-	jsonFileBytes, err := os.ReadFile("sounds/config.json")
+	jsonFileBytes, err := os.ReadFile("sound/config.json")
 	if err != nil {
 		log.Fatalf("read json file: %v", err)
 	}
@@ -70,29 +70,109 @@ func main() {
 	//	calculate keyframe
 	channels := 2
 	sampleRate := 48000.0
-	startMs := 0.0
-	endMs := 157.79166666666666
-	startFrame := int(startMs * float64(sampleRate) / 1000)
-	endFrame := int(endMs * float64(sampleRate) / 1000)
 
-	startSample := startFrame * channels
-	endSample := endFrame * channels
+	events := hook.Start()
+	defer hook.End()
+	for event := range events {
+		if event.Kind != hook.KeyDown {
+			continue
+		}
+		fmt.Printf("%+v\n", event)
 
-	pcmSamples := pcmBuffer.Data[startSample:endSample]
-	pcmData := make([]byte, len(pcmSamples)*2)
-	for i, sample := range pcmSamples {
-		binary.LittleEndian.PutUint16(
-			pcmData[i*2:],
-			uint16(int16(sample)),
-		)
+		key := eventToKey(int(event.Keycode))
+
+		definition, ok := config.Definitions[key]
+
+		if !ok {
+			continue
+		}
+
+		startMs := definition.Timing[0][0]
+		endMs := definition.Timing[0][1]
+		startFrame := int(startMs * float64(sampleRate) / 1000)
+		endFrame := int(endMs * float64(sampleRate) / 1000)
+
+		startSample := startFrame * channels
+		endSample := endFrame * channels
+
+		pcmSamples := pcmBuffer.Data[startSample:endSample]
+		pcmData := make([]byte, len(pcmSamples)*2)
+		for i, sample := range pcmSamples {
+			binary.LittleEndian.PutUint16(
+				pcmData[i*2:],
+				uint16(int16(sample)),
+			)
+		}
+
+		// create a player
+		player := ctx.NewPlayer(bytes.NewReader(pcmData))
+
+		player.Play()
+
+		for player.IsPlaying() {
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
 
-	// create a player
-	player := ctx.NewPlayer(bytes.NewReader(pcmData))
+	for {
+		startMs := 0.0
+		endMs := 157.79166666666666
+		startFrame := int(startMs * float64(sampleRate) / 1000)
+		endFrame := int(endMs * float64(sampleRate) / 1000)
 
-	player.Play()
+		startSample := startFrame * channels
+		endSample := endFrame * channels
 
-	for player.IsPlaying() {
-		time.Sleep(10 * time.Millisecond)
+		pcmSamples := pcmBuffer.Data[startSample:endSample]
+		pcmData := make([]byte, len(pcmSamples)*2)
+		for i, sample := range pcmSamples {
+			binary.LittleEndian.PutUint16(
+				pcmData[i*2:],
+				uint16(int16(sample)),
+			)
+		}
+
+		// create a player
+		player := ctx.NewPlayer(bytes.NewReader(pcmData))
+
+		player.Play()
+
+		for player.IsPlaying() {
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
+}
+
+func eventToKey(key int) string {
+	var textKey string
+	switch key {
+	case 16:
+		textKey = "KeyQ"
+	case 17:
+		textKey = "KeyW"
+	case 18:
+		textKey = "KeyE"
+	case 19:
+		textKey = "KeyR"
+	case 20:
+		textKey = "KeyT"
+	case 21:
+		textKey = "KeyY"
+	case 22:
+		textKey = "KeyU"
+	case 23:
+		textKey = "KeyI"
+	case 24:
+		textKey = "KeyO"
+	case 25:
+		textKey = "KeyP"
+	case 26:
+		textKey = "BracketLeft"
+	case 27:
+		textKey = "BracketRight"
+	case 14:
+		textKey = "Backspace"
+	}
+
+	return textKey
 }
