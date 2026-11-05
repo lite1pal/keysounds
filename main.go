@@ -10,7 +10,6 @@ import (
 	hook "github.com/robotn/gohook"
 	"log"
 	"os"
-	"time"
 )
 
 type Definition struct {
