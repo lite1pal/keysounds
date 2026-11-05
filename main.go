@@ -103,14 +103,12 @@ func main() {
 			)
 		}
 
-		// create a player
-		player := ctx.NewPlayer(bytes.NewReader(pcmData))
+		go func() {
+			// create a player
+			player := ctx.NewPlayer(bytes.NewReader(pcmData))
 
-		player.Play()
-
-		for player.IsPlaying() {
-			time.Sleep(10 * time.Millisecond)
-		}
+			player.Play()
+		}()
 	}
 }
 
