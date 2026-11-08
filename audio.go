@@ -26,7 +26,13 @@ func CreateAudioCtx(sampleRate uint32) (*oto.Context, error) {
 	return ctx, nil
 }
 
-func GetSegment(startMs float64, endMs float64, sampleRate uint32, pcm *audio.IntBuffer) []byte {
+func GetSegment(startMs float64, endMs float64, sampleRate uint32, pcm *audio.IntBuffer) ([]byte, error) {
+	if startMs < 0 || endMs < 0 {
+		return nil, fmt.Errorf("startMs and endMs must be positive numbers")
+	}
+	if startMs > endMs {
+		return nil, fmt.Errorf("endMs must be higher than startMs")
+	}
 	startFrame := int(startMs * float64(sampleRate) / 1000)
 	endFrame := int(endMs * float64(sampleRate) / 1000)
 	startSample := startFrame * channels
@@ -39,7 +45,7 @@ func GetSegment(startMs float64, endMs float64, sampleRate uint32, pcm *audio.In
 			uint16(int16(sample)),
 		)
 	}
-	return pcmData
+	return pcmData, nil
 }
 
 func CreateAndPlay(ctx *oto.Context, pcmData []byte) {

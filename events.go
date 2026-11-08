@@ -7,7 +7,7 @@ import (
 	hook "github.com/robotn/gohook"
 )
 
-func ListenEvents(config *Config, sampleRate uint32, pcmBuffer *audio.IntBuffer, ctx *oto.Context) {
+func ListenEvents(config *Config, sampleRate uint32, pcmBuffer *audio.IntBuffer, ctx *oto.Context) error {
 	events := hook.Start()
 	defer hook.End()
 	for event := range events {
@@ -28,9 +28,14 @@ func ListenEvents(config *Config, sampleRate uint32, pcmBuffer *audio.IntBuffer,
 		// get a segment from the wav to play exact key sound
 		startMs := definition.Timing[0][0]
 		endMs := definition.Timing[0][1]
-		pcmData := GetSegment(startMs, endMs, sampleRate, pcmBuffer)
+		pcmData, err := GetSegment(startMs, endMs, sampleRate, pcmBuffer)
+		if err != nil {
+			return fmt.Errorf("get segment: %v", err)
+		}
 
 		// play
 		go CreateAndPlay(ctx, pcmData)
 	}
+
+	return nil
 }
