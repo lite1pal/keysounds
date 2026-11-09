@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
+
 	"github.com/ebitengine/oto/v3"
 	"github.com/go-audio/audio"
 )
@@ -49,9 +51,12 @@ func GetSegment(startMs float64, endMs float64, sampleRate uint32, pcm *audio.In
 }
 
 func CreateAndPlay(ctx *oto.Context, pcmData []byte) {
-	// create a player
+	now := time.Now()
+
 	player := ctx.NewPlayer(bytes.NewReader(pcmData))
 
 	// play
 	player.Play()
+	fmt.Println("playTimeTaken")
+	fmt.Printf("%v", time.Since(now))
 }

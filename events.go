@@ -2,40 +2,63 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/ebitengine/oto/v3"
 	"github.com/go-audio/audio"
 	hook "github.com/robotn/gohook"
 )
 
+type Segments map[string][]byte
+
 func ListenEvents(config *Config, sampleRate uint32, pcmBuffer *audio.IntBuffer, ctx *oto.Context) error {
 	events := hook.Start()
 	defer hook.End()
-	for event := range events {
-		if event.Kind != hook.KeyDown {
-			continue
-		}
-		fmt.Printf("%+v\n", event)
 
-		// map event keys to config key strings
-		key := EventToKey(int(event.Keycode))
+	// get all segments before any events to remove key sound delay
+	segments := make(Segments)
 
-		definition, ok := config.Definitions[key]
-
-		if !ok {
-			continue
-		}
-
-		// get a segment from the wav to play exact key sound
-		startMs := definition.Timing[0][0]
-		endMs := definition.Timing[0][1]
+	for key, definition := range config.Definitions {
+		startMs := float64(definition.Timing[0][0])
+		endMs := float64(definition.Timing[0][1])
 		pcmData, err := GetSegment(startMs, endMs, sampleRate, pcmBuffer)
 		if err != nil {
 			return fmt.Errorf("get segment: %v", err)
 		}
 
-		// play
-		go CreateAndPlay(ctx, pcmData)
+		segments[key] = pcmData
 	}
 
+	for event := range events {
+		if event.Kind != hook.KeyDown {
+			continue
+		}
+
+		HandleEvent(event, segments, ctx)
+	}
+
+	fmt.Println("we're out!")
+
 	return nil
+}
+
+func HandleEvent(event hook.Event, segments Segments, ctx *oto.Context) {
+	fmt.Printf("%+v\n", event)
+	now := time.Now()
+
+	// map event keys to config key strings
+	key := EventToKey(int(event.Keycode))
+
+	pcmData, ok := segments[key]
+
+	if !ok {
+		return
+	}
+
+	timeTaken := time.Since(now)
+
+	fmt.Println("timeTaken:")
+	fmt.Printf("%v\n", timeTaken)
+	// play
+	go CreateAndPlay(ctx, pcmData)
 }

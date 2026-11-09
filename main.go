@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os"
 
@@ -12,11 +13,11 @@ import (
 var channels = 2 // mono - 1; stereo - 2
 var configPath = "sound/config.json"
 
-func main() {
+func Run() error {
 	// read wav file
 	fileBytes, err := os.ReadFile("sound/audio.wav")
 	if err != nil {
-		log.Fatalf("read WAV file: %v", err)
+		return fmt.Errorf("read WAV file: %v", err)
 	}
 
 	// create a reader from the file bytes
@@ -25,13 +26,13 @@ func main() {
 	// create a wav decoder
 	decoderWav := wav.NewDecoder(fileBytesReader)
 	if !decoderWav.IsValidFile() {
-		log.Fatal("invalid wav file")
+		return fmt.Errorf("invalid wav file")
 	}
 
 	// access all pcm data
 	pcmBuffer, err := decoderWav.FullPCMBuffer()
 	if err != nil {
-		log.Fatalf("get full pcm buffer: %v", err)
+		return fmt.Errorf("get full pcm buffer: %v", err)
 	}
 
 	sampleRate := decoderWav.SampleRate
@@ -39,18 +40,29 @@ func main() {
 	// create audio context
 	ctx, err := CreateAudioCtx(sampleRate)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("create audio ctx: %v", err)
 	}
+
 	if err := ctx.Err(); err != nil {
-		log.Fatalf("audio context error: %v", err)
+		return fmt.Errorf("audio ctx error: %v", err)
 	}
 
 	// parse json config
 	config, err := ParseJsonFile(configPath)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("parse json file: %v", err)
 	}
 
 	// start listening for keyboard events
-	ListenEvents(config, sampleRate, pcmBuffer, ctx)
+	if err := ListenEvents(config, sampleRate, pcmBuffer, ctx); err != nil {
+		return fmt.Errorf("listen events: %v", err)
+	}
+
+	return nil
+}
+
+func main() {
+	if err := Run(); err != nil {
+		log.Fatal(err)
+	}
 }
