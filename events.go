@@ -43,22 +43,12 @@ func ListenEvents(config *Config, sampleRate uint32, pcmBuffer *audio.IntBuffer,
 }
 
 func HandleEvent(event hook.Event, segments Segments, ctx *oto.Context) {
-	fmt.Printf("%+v\n", event)
-	now := time.Now()
-
 	// map event keys to config key strings
 	key := EventToKey(int(event.Keycode))
-
 	pcmData, ok := segments[key]
-
 	if !ok {
 		return
 	}
-
-	timeTaken := time.Since(now)
-
-	fmt.Println("timeTaken:")
-	fmt.Printf("%v\n", timeTaken)
 	// play
 	go CreateAndPlay(ctx, pcmData)
 }
