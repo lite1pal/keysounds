@@ -15,7 +15,7 @@ var configPath = "sound/config.json"
 
 func Run() error {
 	// read wav file
-	fileBytes, err := os.ReadFile("sound/audio.wav")
+	fileBytes, err := os.ReadFile("sound/concatenated_audio.wav")
 	if err != nil {
 		return fmt.Errorf("read WAV file: %v", err)
 	}
