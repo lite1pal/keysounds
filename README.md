@@ -12,7 +12,7 @@ git clone https://github.com/lite1pal/keysounds.git
 
 ## Usage
 
-Download a sound pack from Mechvibes.
+Download a sound pack from [Mechvibes](https://mechvibes.com/sound-packs?license=Personal+use).
 
 Only packs that have `config.json` and `concatenated_audio.wav` are supported at the moment.
 
