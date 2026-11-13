@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/ebitengine/oto/v3"
 	"github.com/go-audio/audio"
