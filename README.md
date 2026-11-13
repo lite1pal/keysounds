@@ -12,15 +12,17 @@ git clone https://github.com/lite1pal/keysounds.git
 
 ## Usage
 
+Download a sound pack from Mechvibes.
+
+Only packs that have `config.json` and `concatenated_audio.wav` are supported at the moment.
+
+Unzip the pack, rename it to `sound/` and put the folder in the project root.
+
 Run the program:
 
 ```
 cd keysounds
-go run main.go
+go run .
 ```
-
-By default, there is an open-source "Rain drops" sound pack included under `/sound`.
-
-You can download any sound pack from [here](https://mechvibes.com/sound-packs?license=Personal+use).
 
 Enjoy!
